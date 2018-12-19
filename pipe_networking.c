@@ -12,8 +12,8 @@
   =========================*/
 int server_handshake(int *to_client) {
   mkfifo("request",0644);
-  printf("server: waiting for server requests\n");
 
+  printf("server: waiting for server requests\n");
   int req = open("request",O_RDONLY);
   char *client_data;
   read(req,client_data,100);
@@ -22,12 +22,15 @@ int server_handshake(int *to_client) {
   int ack = open(client_data,O_WRONLY);
   char *ack_data = "request acknowledged";
   printf("server: %s\n",ack_data);
-  write(ack,ack_data,strlen(ack_data));
+  write(ack,ack_data,strlen(ack_data)+1);
   *to_client = ack;
 
   char *final;
   read(req,final,100);
   printf("server: %s\n",final);
+
+  close(req);
+  close(ack);
   return req;
 }
 
@@ -48,7 +51,7 @@ int client_handshake(int *to_server) {
   char *my_data = "acknowledge";
   printf("client: sending request\n");
   *to_server = req;
-  write(req,my_data,strlen(my_data));
+  write(req,my_data,strlen(my_data)+1);
 
   int ack = open("acknowledge",O_RDONLY);
   char *acknowledgement;
@@ -57,7 +60,10 @@ int client_handshake(int *to_server) {
   remove("acknowledge");
 
   char *confirmation = "received acknowledgement confirmation";
-  write(req,confirmation,strlen(confirmation));
+  write(req,confirmation,strlen(confirmation)+1);
   printf("client: sending confirmation\n");
+
+  close(req);
+  close(ack);
   return ack;
 }
